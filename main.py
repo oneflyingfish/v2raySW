@@ -1,11 +1,11 @@
 import subscription
-import global_args
+from common import GlobalArgs
 
 def main():
     print("hello")
-    urls = subscription.analyze_subscription(subscription_url=global_args.subscription, help_proxy_url="http://172.28.192.1:10809")
+    urls = subscription.analyze_subscription(subscription_url=GlobalArgs.subscription, help_proxy_url="http://172.28.192.1:10809")
     for url in urls:
-        print(url.ToList())
+        print(url.Hash())
         print()
 
 if __name__ == "__main__":

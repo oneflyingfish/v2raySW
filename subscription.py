@@ -2,7 +2,7 @@ import requests
 import base64
 import proxy_url
 
-def analyze_subscription(subscription_url:str, help_proxy_url: str=None):
+def AnalyzeSubscription(subscription_url:str, help_proxy_url: str=None):
         sub_urls=[]
 
         try:
