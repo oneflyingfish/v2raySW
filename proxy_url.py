@@ -1,5 +1,11 @@
 import base64
 import json
+import os
+from common import GlobalArgs
+import common
+import time
+import subprocess
+import requests
 from urllib.parse import unquote
 
 class ProxyType:
@@ -41,7 +47,41 @@ class ProxyUrl:
     def GetXrayConfig(self)->dict:
         print("you call in-valid ProxyUrl")
         return {}
+    
+    def GetLatency(self, http_port:int)->float: # ms
+        uuid = self.Hash()
+        if uuid is None:
+            return -1
+        config_fold=os.path.join(GlobalArgs.cache_path, uuid)
+        os.makedirs(config_fold,exist_ok=True)
+        config_path=os.path.join(config_fold,"config.json")
+        common.write_config_json(self.GetXrayConfig(),config_path,http_port)
+        process = subprocess.Popen("{} run -c {}> /dev/null 2>&1 &".format(GlobalArgs.xray_path, config_path), shell=True)
+        if process.stderr:
+            print(process.stderr)
+            return -1
 
+        flag=0
+        for _ in range(10):
+            try:
+                start_time = time.time()
+                response = requests.get(
+                    GlobalArgs.test_url,
+                    verify=False,
+                    timeout=5,
+                    proxies={"http": f"http://127.0.0.1:{http_port}", "https": f"http://127.0.0.1:{http_port}"},
+                )
+                end_time = time.time()
+                if response.status_code == 200:
+                    flag+=1
+                    if flag>2:
+                        process.kill()
+                        return int((end_time - start_time) * 1000)
+            except:
+                time.sleep(0.2)
+
+        process.kill()
+        return -1
 
 class VmessProxyUrl(ProxyUrl):
     def __init__(self):
